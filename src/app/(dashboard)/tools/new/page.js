@@ -125,14 +125,32 @@ export default function NewToolPage() {
             </div>
           </div>
           <div>
-            <label className={labelClasses}>Image URL (optional)</label>
-            <input
-              type="url"
-              value={form.image}
-              onChange={(e) => setForm({ ...form, image: e.target.value })}
-              className={inputClasses}
-              placeholder="https://..."
-            />
+  
+  <label className="block text-sm font-medium text-gray-700">Image (optional)</label>
+  <input
+    type="file"
+    accept="image/*"
+    capture="environment"   {/* opens back camera on mobile */}
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setForm({ ...form, image: ev.target.result }); // base64 string
+        };
+        reader.readAsDataURL(file);
+      }
+    }}
+    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+  />
+  {form.image && (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={form.image}
+      alt="Preview"
+      className="mt-2 h-32 w-32 object-cover rounded-lg"
+    />
+  )}
           </div>
           <div className="flex gap-4 pt-4">
             <button
