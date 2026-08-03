@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  TRADESMAN
+  ADMIN
+}
+
+enum RentalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  phone     String?
+  location  String?
+  avatar    String?
+  tools     Tool[]
+  rentals   Rental[]
+  createdAt DateTime @default(now())
+}
+
+model Tool {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  category    String
+  pricePerDay Float
+  image       String?
+  location    String
+  condition   String
+  isAvailable Boolean  @default(true)
+  rating      Float    @default(0)
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     String
+  rentals     Rental[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Rental {
+  id        String       @id @default(cuid())
+  tool      Tool         @relation(fields: [toolId], references: [id])
+  toolId    String
+  renter    User         @relation(fields: [renterId], references: [id])
+  renterId  String
+  startDate DateTime
+  endDate   DateTime
+  totalCost Float
+  status    RentalStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+}
