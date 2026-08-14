@@ -65,3 +65,8 @@ model Rental {
   status    RentalStatus @default(PENDING)
   createdAt DateTime     @default(now())
 }
+model Tool {
+  // ... existing fields
+  latitude   Float?   // new
+  longitude  Float?   // new
+}
