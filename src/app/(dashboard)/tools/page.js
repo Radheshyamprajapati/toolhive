@@ -1,62 +1,55 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import ToolCard from "@/components/ToolCard";
-import SkeletonCard from "@/components/SkeletonCard";
-import EmptyState from "@/components/EmptyState";
-import Link from "next/link";
-import { FiPlus } from "react-icons/fi";
+// ... existing imports
 
 export default function ToolsPage() {
   const [tools, setTools] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userLoc, setUserLoc] = useState(null); // { lat, lng }
+  const [sortByDistance, setSortByDistance] = useState(false);
+
+  // Get user location
+  useEffect(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        setUserLoc({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      () => console.log("Location denied")
+    );
+  }, []);
 
   useEffect(() => {
     fetch("/api/tools")
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
+        // If location available and sorting requested, compute distances
+        if (userLoc && sortByDistance) {
+          data.sort((a, b) => {
+            const distA = haversine(userLoc.lat, userLoc.lng, a.latitude, a.longitude);
+            const distB = haversine(userLoc.lat, userLoc.lng, b.latitude, b.longitude);
+            return distA - distB;
+          });
+        }
         setTools(data);
         setLoading(false);
       });
-  }, []);
+  }, [userLoc, sortByDistance]);
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Available Tools</h1>
-          <p className="text-gray-600 mt-1">Rent equipment from verified pros</p>
-        </div>
-        <Link
-          href="/tools/new"
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2"
-        >
-          <FiPlus /> Add Tool
-        </Link>
-      </div>
+  // Haversine distance function in km
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
 
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
-        </div>
-      ) : tools.length === 0 ? (
-        <EmptyState
-          icon={<span className="text-4xl">🔧</span>}
-          title="No tools listed yet"
-          description="Be the first to share your equipment with the community."
-          action={
-            <Link href="/tools/new" className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium">
-              List Your First Tool
-            </Link>
-          }
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tools.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  // Add to UI:
+  // <button onClick={() => setSortByDistance(!sortByDistance)}>
+  //   {sortByDistance ? "Showing nearest first" : "Sort by distance"}
+  // </button>
+
+  // Display distance on ToolCard? Optional: modify ToolCard to accept userLoc and show distance.
 }
