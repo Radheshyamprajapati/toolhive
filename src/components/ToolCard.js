@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FiMapPin, FiStar } from "react-icons/fi";
 
-export default function ToolCard({ tool }) {
+export default function ToolCard({ tool, distance }) {
   return (
     <Link
       href={`/tools/${tool.id}`}
@@ -33,6 +33,14 @@ export default function ToolCard({ tool }) {
             {tool.rating || "New"}
           </div>
         </div>
+
+        {/* NEW: Show distance if provided */}
+        {distance !== undefined && distance !== null && (
+          <p className="text-xs text-gray-500 mt-1">
+            📍 {distance.toFixed(1)} km away
+          </p>
+        )}
+
         <div className="mt-4 flex items-center justify-between">
           <p className="text-indigo-600 font-bold text-lg">${tool.pricePerDay}/day</p>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
